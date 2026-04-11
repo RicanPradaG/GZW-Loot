@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GZW Loot Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0f0d;
+    --bg2: #141510;
+    --bg3: #1a1b16;
+    --border: rgba(180,160,80,0.18);
+    --border2: rgba(180,160,80,0.35);
+    --gold: #c8a84b;
+    --gold2: #e8c96a;
+    --green: #4caf6a;
+    --amber: #e8a030;
+    --dim: #7a7a68;
+    --text: #d8d4c0;
+    --text2: #9a9680;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+  }
+  .scanline {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    z-index: 999;
+  }
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border2);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .logo-mark {
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+  header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--gold2);
+    text-transform: uppercase;
+  }
+  header p { font-size: 12px; color: var(--dim); letter-spacing: 0.05em; margin-top: 1px; }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 16px 24px;
+  }
+  .stat {
+    background: var(--bg2);
+    padding: 12px 16px;
+  }
+  .stat-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+  .stat-value { font-size: 22px; font-weight: 700; color: var(--gold2); font-family: 'Share Tech Mono', monospace; }
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 24px 16px;
+    align-items: center;
+  }
+  input[type="text"], select {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type="text"] { flex: 1; min-width: 180px; }
+  input[type="text"]:focus, select:focus { border-color: var(--gold); }
+  input::placeholder { color: var(--dim); }
+  select { min-width: 160px; cursor: pointer; }
+  select option { background: #1a1b16; }
+  .table-wrap { overflow-x: auto; padding: 0 24px 24px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  thead tr { border-bottom: 1px solid var(--border2); }
+  thead th {
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: color 0.15s;
+  }
+  thead th:hover { color: var(--gold); }
+  thead th.sorted { color: var(--gold2); }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  tbody tr:hover { background: rgba(200,168,75,0.05); }
+  td { padding: 8px 10px; color: var(--text); vertical-align: middle; }
+  td:first-child { font-weight: 500; }
+  .cat-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .price { font-family: 'Share Tech Mono', monospace; font-size: 13px; }
+  .p-high { color: var(--green); }
+  .p-mid  { color: var(--amber); }
+  .p-low  { color: var(--dim); }
+  .trader { font-size: 12px; color: var(--dim); letter-spacing: 0.04em; }
+  .no-results { text-align: center; padding: 3rem; color: var(--dim); font-size: 16px; letter-spacing: 0.05em; }
+  .corner { position: absolute; width: 6px; height: 6px; border-color: var(--gold); border-style: solid; }
+  .tl { top: 0; left: 0; border-width: 1px 0 0 1px; }
+  .tr { top: 0; right: 0; border-width: 1px 1px 0 0; }
+  .bl { bottom: 0; left: 0; border-width: 0 0 1px 1px; }
+  .br { bottom: 0; right: 0; border-width: 0 1px 1px 0; }
+  .bag-btn {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    padding: 3px 9px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+  .bag-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .bag-btn.in-bag { border-color: var(--green); color: var(--green); background: rgba(76,175,106,0.08); }
+  .fob-panel { margin: 0 24px 16px; border: 1px solid var(--border2); background: var(--bg2); }
+  .fob-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    cursor: pointer; user-select: none;
+  }
+  .fob-header:hover { background: rgba(200,168,75,0.04); }
+  .fob-title { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
+  .fob-total { font-family: 'Share Tech Mono', monospace; font-size: 18px; font-weight: 700; color: var(--green); }
+  .fob-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 16px; border-bottom: 1px solid var(--border); font-size: 13px;
+  }
+  .fob-item:last-child { border-bottom: none; }
+  .fob-item-name { color: var(--text); flex: 1; }
+  .fob-item-price { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--amber); margin: 0 12px; }
+  .fob-remove { background: transparent; border: none; color: var(--dim); cursor: pointer; font-size: 16px; padding: 0 4px; line-height: 1; transition: color 0.1s; }
+  .fob-remove:hover { color: #dc5050; }
+  .fob-empty { padding: 16px; text-align: center; color: var(--dim); font-size: 12px; letter-spacing: 0.08em; }
+  .fob-actions { display: flex; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border); }
+  .fob-clear { background: transparent; border: 1px solid rgba(220,80,80,0.3); color: rgba(220,80,80,0.6); font-family: 'Rajdhani', sans-serif; font-size: 12px; letter-spacing: 0.08em; padding: 5px 14px; cursor: pointer; transition: all 0.15s; }
+  .fob-clear:hover { border-color: #dc5050; color: #dc5050; }
+  .qty-btn { background: transparent; border: 1px solid var(--border2); color: var(--dim); font-size: 13px; width: 22px; height: 22px; cursor: pointer; transition: all 0.1s; display:flex;align-items:center;justify-content:center;padding:0; }
+  .qty-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+
+<header>
+  <div class="logo-mark">GZW</div>
+  <div>
+    <h1>Loot Reference</h1>
+    <p>LAMANG ISLAND · FIELD INTELLIGENCE DATABASE</p>
+  </div>
+</header>
+
+<div class="stats" id="stats"></div>
+
+
+<div class="fob-panel" id="fobPanel">
+  <div class="fob-header" onclick="toggleFob()">
+    <span class="fob-title">&#9670; FOB Loot Bag <span id="fobCount" style="color:var(--dim);font-weight:400"></span></span>
+    <span class="fob-total" id="fobTotal">$0</span>
+  </div>
+  <div id="fobBody">
+    <div class="fob-empty" id="fobEmpty">NO ITEMS ADDED &mdash; CLICK + ON ANY ROW TO TRACK LOOT</div>
+    <div id="fobList"></div>
+    <div class="fob-actions" id="fobActions" style="display:none">
+      <button class="fob-clear" onclick="clearBag()">CLEAR ALL</button>
+    </div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <input type="text" id="search" placeholder="Search items..." />
+  <select id="catFilter"><option value="">All categories</option></select>
+  <select id="traderFilter">
+    <option value="">All traders</option>
+    <option value="Gunny">Gunny</option>
+    <option value="Turncoat">Turncoat</option>
+    <option value="Lab Rat">Lab Rat</option>
+    <option value="Artisan">Artisan</option>
+    <option value="—">No trader</option>
+  </select>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th onclick="sortBy('name')">Name</th>
+        <th onclick="sortBy('category')">Category</th>
+        <th onclick="sortBy('size')">Size</th>
+        <th onclick="sortBy('weight')">Weight</th>
+        <th>Bag</th>
+        <th onclick="sortBy('price')" class="sorted">Sell Price</th>
+        <th onclick="sortBy('trader')">Sell At</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div id="noResults" class="no-results" style="display:none;">NO ITEMS MATCH YOUR FILTERS</div>
+</div>
+
+<script>
+const CAT_COLORS = {
+  'Vices':               { bg: 'rgba(232,160,48,0.12)',  border: 'rgba(232,160,48,0.4)',  text: '#e8a030' },
+  'Jewellery':           { bg: 'rgba(200,168,75,0.12)',  border: 'rgba(200,168,75,0.4)',  text: '#c8a84b' },
+  'Electronics':         { bg: 'rgba(80,160,220,0.10)',  border: 'rgba(80,160,220,0.35)', text: '#60a8dc' },
+  'Funds':               { bg: 'rgba(76,175,106,0.10)',  border: 'rgba(76,175,106,0.35)', text: '#4caf6a' },
+  'Evidence':            { bg: 'rgba(160,100,220,0.10)', border: 'rgba(160,100,220,0.35)',text: '#b06ce0' },
+  'Military Equipment':  { bg: 'rgba(220,60,60,0.10)',   border: 'rgba(220,60,60,0.35)',  text: '#dc5050' },
+  'Military Material':   { bg: 'rgba(120,140,80,0.10)',  border: 'rgba(120,140,80,0.35)', text: '#8a9c60' },
+  'Laboratory Supplies': { bg: 'rgba(60,200,180,0.08)',  border: 'rgba(60,200,180,0.3)',  text: '#3cc8b4' },
+  'Workshop Supplies':   { bg: 'rgba(200,100,40,0.10)',  border: 'rgba(200,100,40,0.35)', text: '#c86428' },
+  'Household Item':      { bg: 'rgba(140,140,120,0.10)', border: 'rgba(140,140,120,0.3)', text: '#8c8c78' },
+  'Tech':                { bg: 'rgba(80,160,220,0.10)',  border: 'rgba(80,160,220,0.35)', text: '#60a8dc' },
+};
+
+const items = [
+  {name:'Allanach Single Malt Scotch - 40y',category:'Vices',size:'1x2',weight:2.1,price:5451,trader:'Gunny'},
+  {name:'Breda Rum - 30y',category:'Vices',size:'1x2',weight:1.7,price:3802,trader:'Gunny'},
+  {name:'Goodlad Whiskey - 20y',category:'Vices',size:'1x2',weight:1.6,price:450,trader:'Gunny'},
+  {name:'Moutai - 50y',category:'Vices',size:'1x2',weight:1.5,price:15000,trader:'Gunny'},
+  {name:'Tzintzimitl Tequila - 25y',category:'Vices',size:'1x2',weight:1.8,price:2020,trader:'Gunny'},
+  {name:'Snake Wine',category:'Vices',size:'1x2',weight:1.4,price:399,trader:'Gunny'},
+  {name:'Delicate Perfume Bottle',category:'Vices',size:'1x1',weight:0.3,price:150,trader:'Gunny'},
+  {name:'Fragrant Perfume Bottle',category:'Vices',size:'1x2',weight:0.25,price:75,trader:'Gunny'},
+  {name:'Heavenly Perfume Bottle',category:'Vices',size:'1x2',weight:null,price:335,trader:'Gunny'},
+  {name:'Hyperborea Cigarettes',category:'Vices',size:'1x1',weight:0.02,price:139,trader:'Gunny'},
+  {name:'Lambert Cigars',category:'Vices',size:'1x2',weight:0.6,price:282,trader:'Gunny'},
+  {name:'Dark Pearl Necklace',category:'Jewellery',size:'1x1',weight:0.05,price:1350,trader:'Turncoat'},
+  {name:'Diamond Earrings',category:'Jewellery',size:'1x1',weight:0.02,price:5700,trader:'Turncoat'},
+  {name:'Diamond Ring',category:'Jewellery',size:'1x1',weight:0.01,price:7700,trader:'Turncoat'},
+  {name:'Diamond-Coral Ring',category:'Jewellery',size:'1x1',weight:0.02,price:5250,trader:'Turncoat'},
+  {name:'Elaborate Ring',category:'Jewellery',size:'1x1',weight:0.02,price:4400,trader:'Turncoat'},
+  {name:'Emerald Necklace',category:'Jewellery',size:'1x1',weight:0.05,price:5300,trader:'Turncoat'},
+  {name:'Gemstone Ring',category:'Jewellery',size:'1x1',weight:0.01,price:820,trader:'Turncoat'},
+  {name:'Gold Necklace',category:'Jewellery',size:'1x1',weight:0.02,price:180,trader:'Turncoat'},
+  {name:'Gold Ring',category:'Jewellery',size:'1x1',weight:0.02,price:150,trader:'Turncoat'},
+  {name:'Luxury Smartwatch',category:'Jewellery',size:'1x1',weight:0.15,price:600,trader:'Turncoat'},
+  {name:'Majestic Titanium Watch',category:'Jewellery',size:'1x1',weight:0.1,price:8000,trader:'Turncoat'},
+  {name:'Modern Watch',category:'Jewellery',size:'1x1',weight:0.12,price:150,trader:'Turncoat'},
+  {name:'Perfect Pearl Earrings',category:'Jewellery',size:'1x1',weight:0.01,price:5000,trader:'Turncoat'},
+  {name:'Platinum Ring',category:'Jewellery',size:'1x1',weight:0.01,price:10000,trader:'Turncoat'},
+  {name:'Sapphire Pendant',category:'Jewellery',size:'1x1',weight:0.01,price:3600,trader:'Turncoat'},
+  {name:'Sleek Luxury Watch',category:'Jewellery',size:'1x1',weight:0.13,price:1700,trader:'Turncoat'},
+  {name:'Master Carbon SEAL Automatic Watch',category:'Jewellery',size:'1x1',weight:0.17,price:1450,trader:'Turncoat'},
+  {name:'Black Luxury Phone',category:'Electronics',size:'1x1',weight:0.1,price:1500,trader:'Lab Rat'},
+  {name:'Expensive Smartphone',category:'Electronics',size:'1x1',weight:0.1,price:350,trader:'Lab Rat'},
+  {name:'Luxury Smartphone',category:'Electronics',size:'1x1',weight:0.1,price:1000,trader:'Lab Rat'},
+  {name:'Smartphone',category:'Electronics',size:'1x1',weight:0.1,price:250,trader:'Lab Rat'},
+  {name:'Common Credit Card',category:'Funds',size:'1x1',weight:0.005,price:600,trader:'Artisan'},
+  {name:'Gold Credit Card',category:'Funds',size:'1x1',weight:0.005,price:2200,trader:'Artisan'},
+  {name:'Platinum Credit Card',category:'Funds',size:'1x1',weight:0.005,price:6000,trader:'Artisan'},
+  {name:'Black Credit Card',category:'Funds',size:'1x1',weight:0.01,price:15000,trader:'Artisan'},
+  {name:'Businessman ID Card',category:'Evidence',size:'1x1',weight:0.05,price:937,trader:'—'},
+  {name:'Local ID Card',category:'Evidence',size:'1x1',weight:0.05,price:187,trader:'—'},
+  {name:"Driver's License",category:'Evidence',size:'1x1',weight:0.05,price:262,trader:'—'},
+  {name:'Tourist ID Card',category:'Evidence',size:'1x1',weight:0.05,price:112,trader:'—'},
+  {name:'Tourist Passport',category:'Evidence',size:'1x1',weight:0.05,price:2625,trader:'—'},
+  {name:'VIP Passport',category:'Evidence',size:'1x1',weight:0.05,price:6800,trader:'—'},
+  {name:'Army Intel',category:'Evidence',size:'1x2',weight:0.1,price:1280,trader:'—'},
+  {name:'Crime-related Intel',category:'Evidence',size:'1x2',weight:0.1,price:140,trader:'—'},
+  {name:'Digital Camera',category:'Evidence',size:'1x1',weight:0.25,price:112,trader:'—'},
+  {name:'Laptop',category:'Evidence',size:'2x2',weight:1.5,price:750,trader:'—'},
+  {name:'Reflex Camera',category:'Evidence',size:'2x1',weight:0.4,price:960,trader:'—'},
+  {name:'Reinforced Military Laptop',category:'Evidence',size:'2x2',weight:2.5,price:2300,trader:'—'},
+  {name:'Encrypted Hard Disk Drive',category:'Evidence',size:'1x1',weight:0.18,price:3450,trader:'—'},
+  {name:'AN/PYQ-10',category:'Military Equipment',size:'1x2',weight:0.97,price:3150,trader:'—'},
+  {name:'AZART P1 Radio',category:'Military Equipment',size:'1x2',weight:0.72,price:825,trader:'—'},
+  {name:'Biometric Access Card',category:'Military Equipment',size:'1x1',weight:0.008,price:2000,trader:'—'},
+  {name:'Biometric Thumb Drive',category:'Military Equipment',size:'1x1',weight:0.004,price:1875,trader:'—'},
+  {name:'C2 Military Laptop',category:'Military Equipment',size:'2x2',weight:5.0,price:4900,trader:'—'},
+  {name:'Handheld ECM Jammer',category:'Military Equipment',size:'1x2',weight:2.0,price:712,trader:'—'},
+  {name:'HGCS-30 UAV Control Station',category:'Military Equipment',size:'2x2',weight:3.0,price:2000,trader:'—'},
+  {name:'KIK-11 Tactical Key Loader',category:'Military Equipment',size:'1x1',weight:0.45,price:2900,trader:'—'},
+  {name:'LTSD-4-3 Laser Designator',category:'Military Equipment',size:'3x3',weight:14.0,price:60000,trader:'—'},
+  {name:'NPI-2 Navigation Receiver',category:'Military Equipment',size:'1x1',weight:0.3,price:1100,trader:'—'},
+  {name:'One-Time Pad Key Sheets',category:'Military Equipment',size:'1x1',weight:0.1,price:2400,trader:'—'},
+  {name:'Operation Data Encrypted Hard Disk',category:'Military Equipment',size:'1x1',weight:0.18,price:4900,trader:'—'},
+  {name:'PBG-01+ UAV Control Station',category:'Military Equipment',size:'2x2',weight:14.2,price:6400,trader:'—'},
+  {name:'Rugged Military Tablet',category:'Military Equipment',size:'2x2',weight:2.0,price:1200,trader:'—'},
+  {name:'Signal Repeater RT97S',category:'Military Equipment',size:'3x2',weight:1.66,price:675,trader:'—'},
+  {name:'STRELETS-M Tablet',category:'Military Equipment',size:'1x1',weight:null,price:4700,trader:'—'},
+  {name:'GLONASS Grot-M Navigation Receiver',category:'Military Equipment',size:'1x2',weight:0.8,price:937,trader:'—'},
+  {name:'R-438 Barrier-T',category:'Military Equipment',size:'2x2',weight:16.0,price:45000,trader:'—'},
+  {name:'ATM Hacking Tool',category:'Military Equipment',size:'1x1',weight:0.15,price:5000,trader:'—'},
+  {name:'Camouflage Fabric',category:'Military Material',size:'2x1',weight:0.48,price:10,trader:'—'},
+  {name:'Low-Grade Gunpowder',category:'Military Material',size:'1x2',weight:0.45,price:23,trader:'—'},
+  {name:'Paracord',category:'Military Material',size:'2x1',weight:0.1,price:9,trader:'—'},
+  {name:'Weapon Oil',category:'Military Material',size:'1x2',weight:0.272,price:9,trader:'—'},
+  {name:'Aramid Cloth',category:'Military Material',size:'2x1',weight:0.061,price:42,trader:'—'},
+  {name:'Drain Cleaner',category:'Laboratory Supplies',size:'1x2',weight:5.0,price:15,trader:'—'},
+  {name:'Industrial Solvent',category:'Laboratory Supplies',size:'2x2',weight:3.8,price:29,trader:'—'},
+  {name:'Sulfuric Acid',category:'Laboratory Supplies',size:'2x2',weight:5.03,price:99,trader:'—'},
+  {name:'Thermal Blanket',category:'Laboratory Supplies',size:'1x1',weight:0.057,price:1,trader:'—'},
+  {name:'UN Medical Tools',category:'Laboratory Supplies',size:'2x1',weight:0.5,price:15,trader:'—'},
+  {name:'Vial of Antigens',category:'Laboratory Supplies',size:'1x1',weight:0.03,price:947,trader:'—'},
+  {name:'Water Purification Tablets',category:'Laboratory Supplies',size:'1x1',weight:0.125,price:27,trader:'—'},
+  {name:'Disinfectant',category:'Laboratory Supplies',size:'1x1',weight:1.0,price:199,trader:'—'},
+  {name:'Brake Fluid',category:'Workshop Supplies',size:'2x2',weight:3.8,price:21,trader:'—'},
+  {name:'Broken Angle Grinder',category:'Workshop Supplies',size:'2x2',weight:2.499,price:56,trader:'—'},
+  {name:'Broken Carpentry Hammer',category:'Workshop Supplies',size:'1x2',weight:0.312,price:6,trader:'—'},
+  {name:'Broken Handsaw',category:'Workshop Supplies',size:'2x2',weight:0.68,price:24,trader:'—'},
+  {name:'Broken Jigsaw',category:'Workshop Supplies',size:'2x2',weight:2.0,price:55,trader:'—'},
+  {name:'Broken Nailgun',category:'Workshop Supplies',size:'2x2',weight:2.5,price:75,trader:'—'},
+  {name:'Broken Screwdriver',category:'Workshop Supplies',size:'1x1',weight:0.12,price:6,trader:'—'},
+  {name:'Fuel Canister',category:'Workshop Supplies',size:'2x2',weight:5.0,price:21,trader:'—'},
+  {name:'Jumper Cables',category:'Workshop Supplies',size:'2x2',weight:2.34,price:30,trader:'—'},
+  {name:'Motor Oil',category:'Workshop Supplies',size:'2x2',weight:4.3,price:15,trader:'—'},
+  {name:'Multitool',category:'Workshop Supplies',size:'1x1',weight:0.12,price:54,trader:'—'},
+  {name:'Rubber Renue',category:'Workshop Supplies',size:'1x2',weight:1.0,price:51,trader:'—'},
+  {name:'Toolset',category:'Workshop Supplies',size:'2x2',weight:1.0,price:142,trader:'—'},
+  {name:'White Lithium Grease',category:'Workshop Supplies',size:'2x3',weight:15.88,price:150,trader:'—'},
+  {name:'Bleach',category:'Household Item',size:'1x1',weight:3.57,price:19,trader:'—'},
+  {name:'Carton of Tahirs Cigarettes',category:'Household Item',size:'3x1',weight:0.25,price:27,trader:'—'},
+  {name:'Deck of Cards',category:'Household Item',size:'1x1',weight:0.088,price:3,trader:'—'},
+  {name:'Disinfectant',category:'Household Item',size:'1x1',weight:1.0,price:199,trader:'—'},
+  {name:'Fishing Line',category:'Household Item',size:'1x1',weight:0.13,price:3,trader:'—'},
+  {name:'Hand Mirror',category:'Household Item',size:'1x2',weight:0.4,price:9,trader:'—'},
+  {name:'Insect Repellant Spray',category:'Household Item',size:'1x1',weight:0.258,price:6,trader:'—'},
+  {name:'Lamp Oil',category:'Household Item',size:'1x2',weight:1.0,price:3,trader:'—'},
+  {name:'Lighter',category:'Household Item',size:'1x1',weight:0.04,price:1,trader:'—'},
+  {name:'Motorbike Battery',category:'Household Item',size:'2x1',weight:2.0,price:36,trader:'—'},
+  {name:'Naosaoad 100% Clean',category:'Household Item',size:'1x2',weight:0.5,price:18,trader:'—'},
+  {name:'Pack of AA Batteries',category:'Household Item',size:'1x1',weight:0.024,price:7,trader:'—'},
+  {name:'Pack of Premium Coffee',category:'Household Item',size:'1x2',weight:0.6,price:27,trader:'—'},
+  {name:'Petrolatum',category:'Household Item',size:'1x1',weight:0.37,price:9,trader:'—'},
+  {name:'Phone Charger',category:'Household Item',size:'1x1',weight:0.075,price:9,trader:'—'},
+  {name:'Propane Bottle',category:'Household Item',size:'1x2',weight:0.453,price:31,trader:'—'},
+  {name:'Refillable Lighter',category:'Household Item',size:'1x1',weight:0.08,price:37,trader:'—'},
+  {name:'Sewing Set',category:'Household Item',size:'1x1',weight:0.146,price:1,trader:'—'},
+  {name:'Tahirs Cigarettes',category:'Household Item',size:'1x1',weight:0.013,price:5,trader:'—'},
+  {name:'Car Battery',category:'Tech',size:'2x2',weight:12.66,price:56,trader:'—'},
+];
+
+const categories = [...new Set(items.map(i => i.category))].sort();
+const catSel = document.getElementById('catFilter');
+categories.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o); });
+
+let sortKey = 'price', sortDir = -1;
+
+function badge(cat) {
+  const c = CAT_COLORS[cat] || { bg: 'rgba(140,140,120,0.1)', border: 'rgba(140,140,120,0.3)', text: '#8c8c78' };
+  return `<span class="cat-badge" style="background:${c.bg};border-color:${c.border};color:${c.text}">${cat}</span>`;
+}
+
+
+// bag stores { price, qty } per item name
+const bag = new Map();
+
+window.toggleBag = function(name, price) {
+  if (bag.has(name)) {
+    bag.delete(name);
+  } else {
+    bag.set(name, { price, qty: 1 });
+  }
+  renderBag();
+  render();
+};
+
+window.setBagQty = function(name, delta) {
+  if (!bag.has(name)) return;
+  const entry = bag.get(name);
+  const newQty = entry.qty + delta;
+  if (newQty <= 0) { bag.delete(name); }
+  else { bag.set(name, { ...entry, qty: newQty }); }
+  renderBag();
+  render();
+};
+
+window.clearBag = function() {
+  bag.clear();
+  renderBag();
+  render();
+};
+
+window.toggleFob = function() {
+  const body = document.getElementById('fobBody');
+  body.style.display = body.style.display === 'none' ? '' : 'none';
+};
+
+function renderBag() {
+  const list = document.getElementById('fobList');
+  const empty = document.getElementById('fobEmpty');
+  const actions = document.getElementById('fobActions');
+  const total = [...bag.values()].reduce((s, v) => s + v.price * v.qty, 0);
+  const totalItems = [...bag.values()].reduce((s, v) => s + v.qty, 0);
+  document.getElementById('fobTotal').textContent = '$' + total.toLocaleString();
+  document.getElementById('fobCount').textContent = bag.size ? '(' + totalItems + ' item' + (totalItems !== 1 ? 's' : '') + ')' : '';
+  if (!bag.size) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    actions.style.display = 'none';
+  } else {
+    empty.style.display = 'none';
+    actions.style.display = 'flex';
+    list.innerHTML = [...bag.entries()].map(([name, {price, qty}]) => {
+      const safeName = name.replace(/'/g, "\\'");
+      return `<div class="fob-item">
+        <span class="fob-item-name">${name}</span>
+        <span style="display:flex;align-items:center;gap:6px;margin:0 10px">
+          <button class="qty-btn" onclick="setBagQty('${safeName}',-1)">&#8722;</button>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--gold2);min-width:18px;text-align:center">${qty}</span>
+          <button class="qty-btn" onclick="setBagQty('${safeName}',1)">&#43;</button>
+        </span>
+        <span class="fob-item-price">$${(price * qty).toLocaleString()}</span>
+        <button class="fob-remove" onclick="toggleBag('${safeName}',${price})">&#215;</button>
+      </div>`;
+    }).join('');
+  }
+}
+
+function render() {
+  const search = document.getElementById('search').value.toLowerCase();
+  const cat = document.getElementById('catFilter').value;
+  const trader = document.getElementById('traderFilter').value;
+
+  let filtered = items.filter(i => {
+    if (search && !i.name.toLowerCase().includes(search) && !i.category.toLowerCase().includes(search)) return false;
+    if (cat && i.category !== cat) return false;
+    if (trader && i.trader !== trader) return false;
+    return true;
+  });
+
+  filtered.sort((a, b) => {
+    let av = a[sortKey], bv = b[sortKey];
+    if (av === null) av = sortDir === 1 ? Infinity : -Infinity;
+    if (bv === null) bv = sortDir === 1 ? Infinity : -Infinity;
+    if (typeof av === 'string') return sortDir * av.localeCompare(bv);
+    return sortDir * (av - bv);
+  });
+
+  const tbody = document.getElementById('tableBody');
+  const noRes = document.getElementById('noResults');
+
+  if (!filtered.length) {
+    tbody.innerHTML = '';
+    noRes.style.display = 'block';
+  } else {
+    noRes.style.display = 'none';
+    tbody.innerHTML = filtered.map(i => {
+      const wt = i.weight !== null ? i.weight.toFixed(3) + ' kg' : '???';
+      const pc = i.price >= 5000 ? 'p-high' : i.price >= 1000 ? 'p-mid' : 'p-low';
+      const inBag = bag.has(i.name);
+      const bagEntry = inBag ? bag.get(i.name) : null;
+      return `<tr>
+        <td>${i.name}</td>
+        <td>${badge(i.category)}</td>
+        <td style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--dim)">${i.size}</td>
+        <td style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--dim)">${wt}</td>
+        <td class="price ${pc}">$${i.price.toLocaleString()}</td>
+        <td class="trader">${i.trader}</td>
+        <td><button class="bag-btn ${inBag ? 'in-bag' : ''}" onclick="toggleBag('${i.name.replace(/'/g, "\\'")}',${i.price})">${inBag ? '&#10003;&nbsp;' + bagEntry.qty : '+'}</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  const total = filtered.reduce((s, i) => s + i.price, 0);
+  const top = filtered.length ? [...filtered].sort((a,b) => b.price - a.price)[0].price : 0;
+  const avg = filtered.length ? Math.round(total / filtered.length) : 0;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="stat-label">Items</div><div class="stat-value">${filtered.length}</div></div>
+    <div class="stat"><div class="stat-label">Total value</div><div class="stat-value">$${total.toLocaleString()}</div></div>
+    <div class="stat"><div class="stat-label">Top item</div><div class="stat-value">$${top.toLocaleString()}</div></div>
+    <div class="stat"><div class="stat-label">Avg price</div><div class="stat-value">$${avg.toLocaleString()}</div></div>
+  `;
+}
+
+window.sortBy = function(key) {
+  if (sortKey === key) sortDir *= -1;
+  else { sortKey = key; sortDir = key === 'price' ? -1 : 1; }
+  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted'));
+  render();
+};
+
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('catFilter').addEventListener('change', render);
+document.getElementById('traderFilter').addEventListener('change', render);
+render();
+</script>
+</body>
+</html>
