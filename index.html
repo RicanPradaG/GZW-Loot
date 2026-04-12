@@ -138,10 +138,6 @@
   .trader { font-size: 12px; color: var(--dim); letter-spacing: 0.04em; }
   .no-results { text-align: center; padding: 3rem; color: var(--dim); font-size: 16px; letter-spacing: 0.05em; }
   .corner { position: absolute; width: 6px; height: 6px; border-color: var(--gold); border-style: solid; }
-  .tl { top: 0; left: 0; border-width: 1px 0 0 1px; }
-  .tr { top: 0; right: 0; border-width: 1px 1px 0 0; }
-  .bl { bottom: 0; left: 0; border-width: 0 0 1px 1px; }
-  .br { bottom: 0; right: 0; border-width: 0 1px 1px 0; }
   .bag-btn {
     background: transparent;
     border: 1px solid var(--border2);
@@ -195,7 +191,6 @@
 
 <div class="stats" id="stats"></div>
 
-
 <div class="fob-panel" id="fobPanel">
   <div class="fob-header" onclick="toggleFob()">
     <span class="fob-title">&#9670; FOB Loot Bag <span id="fobCount" style="color:var(--dim);font-weight:400"></span></span>
@@ -231,9 +226,10 @@
         <th onclick="sortBy('category')">Category</th>
         <th onclick="sortBy('size')">Size</th>
         <th onclick="sortBy('weight')">Weight</th>
-        <th>Bag</th>
         <th onclick="sortBy('price')" class="sorted">Sell Price</th>
+        <th onclick="sortBy('pricePerSlot')">Price / Slot</th>
         <th onclick="sortBy('trader')">Sell At</th>
+        <th>Bag</th>
       </tr>
     </thead>
     <tbody id="tableBody"></tbody>
@@ -374,6 +370,13 @@ const items = [
   {name:'Car Battery',category:'Tech',size:'2x2',weight:12.66,price:56,trader:'—'},
 ];
 
+// Pre-calculate per-slot
+items.forEach(item => {
+  const dim = item.size.split('x');
+  const slots = parseInt(dim[0]) * parseInt(dim[1]);
+  item.pricePerSlot = Math.round(item.price / slots);
+});
+
 const categories = [...new Set(items.map(i => i.category))].sort();
 const catSel = document.getElementById('catFilter');
 categories.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o); });
@@ -484,12 +487,16 @@ function render() {
       const pc = i.price >= 5000 ? 'p-high' : i.price >= 1000 ? 'p-mid' : 'p-low';
       const inBag = bag.has(i.name);
       const bagEntry = inBag ? bag.get(i.name) : null;
+      
+      const ppsFormat = `<span style="color:var(--gold2)">$${i.pricePerSlot.toLocaleString()}</span>`;
+
       return `<tr>
         <td>${i.name}</td>
         <td>${badge(i.category)}</td>
         <td style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--dim)">${i.size}</td>
         <td style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--dim)">${wt}</td>
         <td class="price ${pc}">$${i.price.toLocaleString()}</td>
+        <td class="price">${ppsFormat}</td>
         <td class="trader">${i.trader}</td>
         <td><button class="bag-btn ${inBag ? 'in-bag' : ''}" onclick="toggleBag('${i.name.replace(/'/g, "\\'")}',${i.price})">${inBag ? '&#10003;&nbsp;' + bagEntry.qty : '+'}</button></td>
       </tr>`;
@@ -509,8 +516,9 @@ function render() {
 
 window.sortBy = function(key) {
   if (sortKey === key) sortDir *= -1;
-  else { sortKey = key; sortDir = key === 'price' ? -1 : 1; }
+  else { sortKey = key; sortDir = key === 'name' || key === 'category' || key === 'trader' ? 1 : -1; }
   document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted'));
+  event.currentTarget.classList.add('sorted');
   render();
 };
 
