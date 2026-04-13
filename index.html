@@ -248,10 +248,10 @@
         <th onclick="sortBy('category')">Category</th>
         <th onclick="sortBy('size')">Size</th>
         <th onclick="sortBy('weight')">Weight</th>
-        <th>Bag</th>
         <th onclick="sortBy('price')" class="sorted">Sell Price</th>
         <th onclick="sortBy('pricePerSlot')">Price / Slot</th>
         <th onclick="sortBy('trader')">Sell At</th>
+        <th>Bag</th>
       </tr>
     </thead>
     <tbody id="tableBody"></tbody>
@@ -482,16 +482,20 @@ function renderBag() {
   } else {
     empty.style.display = 'none';
     actions.style.display = 'flex';
-    list.innerHTML = [...bag.entries()].map(([name, {price, qty}]) => {
+    list.innerHTML = [...bag.entries()].map(([name, {price, qty, isCash}]) => {
       const safeName = name.replace(/'/g, "\\'");
+      const displayPrice = isCash ? price : price * qty;
+      const qtyControls = isCash
+        ? `<span style="font-size:10px;letter-spacing:0.08em;color:var(--dim);margin:0 10px">CASH</span>`
+        : `<span style="display:flex;align-items:center;gap:6px;margin:0 10px">
+            <button class="qty-btn" onclick="setBagQty('${safeName}',-1)">&#8722;</button>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--gold2);min-width:18px;text-align:center">${qty}</span>
+            <button class="qty-btn" onclick="setBagQty('${safeName}',1)">&#43;</button>
+           </span>`;
       return `<div class="fob-item">
         <span class="fob-item-name">${name}</span>
-        <span style="display:flex;align-items:center;gap:6px;margin:0 10px">
-          <button class="qty-btn" onclick="setBagQty('${safeName}',-1)">&#8722;</button>
-          <span style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--gold2);min-width:18px;text-align:center">${qty}</span>
-          <button class="qty-btn" onclick="setBagQty('${safeName}',1)">&#43;</button>
-        </span>
-        <span class="fob-item-price">$${(price * qty).toLocaleString()}</span>
+        ${qtyControls}
+        <span class="fob-item-price">$${displayPrice.toLocaleString()}</span>
         <button class="fob-remove" onclick="toggleBag('${safeName}',${price})">&#215;</button>
       </div>`;
     }).join('');
