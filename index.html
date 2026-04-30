@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GZW Loot Reference</title>
+<title>GZW Field Intelligence</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -179,6 +179,14 @@
   .fob-clear:hover { border-color: #dc5050; color: #dc5050; }
   .qty-btn { background: transparent; border: 1px solid var(--border2); color: var(--dim); font-size: 13px; width: 22px; height: 22px; cursor: pointer; transition: all 0.1s; display:flex;align-items:center;justify-content:center;padding:0; }
   .qty-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .item-img { width:32px; height:32px; object-fit:contain; cursor:pointer; transition:transform 0.1s; image-rendering:pixelated; filter:drop-shadow(0 0 2px rgba(0,0,0,0.8)); flex-shrink:0; }
+  .item-img:hover { transform:scale(1.15); }
+  .img-placeholder { width:32px; height:32px; flex-shrink:0; }
+  .img-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; cursor:pointer; }
+  .img-modal.open { display:flex; }
+  .img-modal img { width:160px; height:160px; object-fit:contain; image-rendering:pixelated; filter:drop-shadow(0 0 12px rgba(200,168,75,0.5)); }
+  .img-modal-name { position:fixed; bottom:40%; color:var(--gold2); font-family:'Share Tech Mono',monospace; font-size:13px; letter-spacing:0.1em; text-align:center; }
+
   .cash-row { display:flex; align-items:center; gap:8px; padding:10px 16px; border-bottom:1px solid var(--border); }
   .cash-label { font-size:10px; letter-spacing:0.12em; color:var(--dim); white-space:nowrap; }
   .cash-input-wrap { display:flex; flex:1; align-items:center; background:var(--bg3); border:1px solid var(--border2); padding:5px 10px; gap:6px; }
@@ -189,19 +197,69 @@
   .cash-add:hover { border-color:var(--gold2); color:var(--gold2); }
 
 
+  .nav-tabs { display:flex; gap:0; border-bottom:1px solid var(--border2); padding: 0 24px; background:var(--bg2); }
+  .nav-tab { font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:0.15em; text-transform:uppercase; padding:12px 20px; cursor:pointer; color:var(--dim); border-bottom:2px solid transparent; transition:all 0.15s; background:transparent; border-top:none; border-left:none; border-right:none; }
+  .nav-tab:hover { color:var(--gold); }
+  .nav-tab.active { color:var(--gold2); border-bottom-color:var(--gold2); }
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
+
+  .keys-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap:1px; background:var(--border); margin:16px 24px; }
+  .key-card { background:var(--bg2); padding:12px 14px; }
+  .key-card:hover { background:var(--bg3); }
+  .key-name { font-size:13px; font-weight:700; color:var(--gold2); letter-spacing:0.06em; margin-bottom:4px; }
+  .key-desc { font-size:11px; color:var(--dim); line-height:1.5; margin-bottom:8px; }
+  .key-tags { display:flex; flex-wrap:wrap; gap:4px; }
+  .key-tag { font-size:9px; font-weight:600; letter-spacing:0.1em; padding:2px 7px; border:1px solid; text-transform:uppercase; }
+  .tag-static { color:#3cc8b4; border-color:rgba(60,200,180,0.4); background:rgba(60,200,180,0.08); }
+  .tag-task { color:#b06ce0; border-color:rgba(160,100,220,0.4); background:rgba(160,100,220,0.08); }
+  .tag-location { color:#c8a84b; border-color:rgba(200,168,75,0.35); background:rgba(200,168,75,0.08); }
+  .keys-toolbar { display:flex; flex-wrap:wrap; gap:8px; padding:16px 24px; align-items:center; }
+  .keys-section-title { font-size:10px; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); padding:10px 24px 6px; border-bottom:1px solid var(--border); margin-bottom:0; }
+
+  .tasks-list { margin:0 24px 24px; }
+  .tasks-trader-section { margin-bottom:2px; }
+  .tasks-trader-header { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:var(--bg2); border:1px solid var(--border2); cursor:pointer; user-select:none; }
+  .tasks-trader-header:hover { background:var(--bg3); }
+  .tasks-trader-name { font-size:11px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); }
+  .tasks-trader-count { font-size:11px; color:var(--dim); font-family:'Share Tech Mono',monospace; }
+  .tasks-trader-body { border:1px solid var(--border); border-top:none; }
+  .task-row { display:flex; align-items:center; justify-content:space-between; padding:8px 16px; border-bottom:1px solid var(--border); transition:background 0.1s; }
+  .task-row:last-child { border-bottom:none; }
+  .task-row:hover { background:rgba(200,168,75,0.04); }
+  .task-row.done { opacity:0.45; }
+  .task-name { font-size:13px; color:var(--text); flex:1; }
+  .task-name.done-text { text-decoration:line-through; color:var(--dim); }
+  .task-tags { display:flex; gap:6px; align-items:center; margin:0 12px; }
+  .tag-ver { font-size:9px; color:var(--dim); font-family:'Share Tech Mono',monospace; letter-spacing:0.08em; }
+  .tag-locked { font-size:9px; color:#dc5050; border:1px solid rgba(220,80,80,0.3); padding:1px 6px; letter-spacing:0.06em; }
+  .task-check { width:20px; height:20px; border:1px solid var(--border2); background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.15s; font-size:12px; color:transparent; }
+  .task-check:hover { border-color:var(--gold); }
+  .task-check.checked { border-color:var(--green); background:rgba(76,175,106,0.12); color:var(--green); }
+  .tasks-toolbar { display:flex; flex-wrap:wrap; gap:8px; padding:16px 24px; align-items:center; }
+  .tasks-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:1px; background:var(--border); border:1px solid var(--border); margin:16px 24px; }
+
 </style>
 </head>
 <body>
 <div class="scanline"></div>
+<div class="img-modal" id="imgModal" onclick="closeImgModal()"><img id="modalImg" src="" /><div class="img-modal-name" id="modalName"></div></div>
 
 <header>
   <div class="logo-mark">GZW</div>
   <div>
-    <h1>Loot Reference</h1>
-    <p>LAMANG ISLAND · FIELD INTELLIGENCE DATABASE</p>
+    <h1>Field Intelligence</h1>
+    <p>LAMANG ISLAND · OPERATOR COMPANION</p>
   </div>
 </header>
 
+<nav class="nav-tabs">
+  <button class="nav-tab" onclick="switchTab('loot')">&#9670; Loot</button>
+  <button class="nav-tab" onclick="switchTab('keys')">&#9670; Keys</button>
+  <button class="nav-tab" onclick="switchTab('tasks')">&#9670; Tasks</button>
+</nav>
+
+<div id="tab-loot" class="tab-panel">
 <div class="stats" id="stats"></div>
 
 
@@ -392,10 +450,129 @@ const items = [
   {name:'Car Battery',category:'Tech',size:'2x2',weight:12.66,price:56,trader:'—'},
 ];
 
+
+const itemImages = {
+  "Allanach Single Malt Scotch - 40y": `https://static.wikia.nocookie.net/gray-zone-warfare/images/2/2f/Allanach_Single_Malt_Scotch_-_40y_icon.png/revision/latest`,
+  "Breda Rum - 30y": `https://static.wikia.nocookie.net/gray-zone-warfare/images/2/26/Breda_Rum_-_30y_icon.png/revision/latest`,
+  "Goodlad Whiskey - 20y": `https://static.wikia.nocookie.net/gray-zone-warfare/images/1/19/Goodlad_Whiskey_-_20y_icon.png/revision/latest`,
+  "Moutai - 50y": `https://static.wikia.nocookie.net/gray-zone-warfare/images/d/df/Moutai_-_50y_icon.png/revision/latest`,
+  "Tzintzimitl Tequila - 25y": `https://static.wikia.nocookie.net/gray-zone-warfare/images/9/90/Tzintzimitl_Tequila_-_25y_icon.png/revision/latest`,
+  "Snake Wine": `https://static.wikia.nocookie.net/gray-zone-warfare/images/f/f9/Snake_Wine_icon.png/revision/latest`,
+  "Delicate Perfume Bottle": `https://static.wikia.nocookie.net/gray-zone-warfare/images/2/24/Delicate_Perfume_Bottle_icon.png/revision/latest`,
+  "Fragrant Perfume Bottle": `https://static.wikia.nocookie.net/gray-zone-warfare/images/2/2b/Fragrant_Perfume_Bottle_icon.png/revision/latest`,
+  "Heavenly Perfume Bottle": `https://static.wikia.nocookie.net/gray-zone-warfare/images/9/96/Heavenly_Perfume_Bottle_icon.png/revision/latest`,
+  "Hyperborea Cigarettes": `https://static.wikia.nocookie.net/gray-zone-warfare/images/2/25/Hyperborea_Cigarettes_icon.png/revision/latest`,
+  "Lambert Cigars": `https://static.wikia.nocookie.net/gray-zone-warfare/images/2/25/Lambert_Cigars_icon.png/revision/latest`,
+  "Dark Pearl Necklace": `https://static.wikia.nocookie.net/gray-zone-warfare/images/4/43/Dark_Pearl_Necklace_icon.png/revision/latest`,
+  "Diamond Earrings": `https://static.wikia.nocookie.net/gray-zone-warfare/images/3/3c/Diamond_Earrings_icon.png/revision/latest`,
+  "Diamond Ring": `https://static.wikia.nocookie.net/gray-zone-warfare/images/a/a1/Diamond_Ring_icon.png/revision/latest`,
+  "Diamond-Coral Ring": `https://static.wikia.nocookie.net/gray-zone-warfare/images/2/2c/Diamond-Coral_Ring_icon.png/revision/latest`,
+  "Elaborate Ring": `https://static.wikia.nocookie.net/gray-zone-warfare/images/2/2e/Elaborate_Ring_icon.png/revision/latest`,
+  "Emerald Necklace": `https://static.wikia.nocookie.net/gray-zone-warfare/images/7/73/Emerald_Necklace_icon.png/revision/latest`,
+  "Gemstone Ring": `https://static.wikia.nocookie.net/gray-zone-warfare/images/6/6a/Gemstone_Ring_icon.png/revision/latest`,
+  "Gold Necklace": `https://static.wikia.nocookie.net/gray-zone-warfare/images/3/30/Gold_Necklace_icon.png/revision/latest`,
+  "Gold Ring": `https://static.wikia.nocookie.net/gray-zone-warfare/images/0/07/Gold_Ring_icon.png/revision/latest`,
+  "Luxury Smartwatch": `https://static.wikia.nocookie.net/gray-zone-warfare/images/e/e9/Luxury_Smartwatch_icon.png/revision/latest`,
+  "Majestic Titanium Watch": `https://static.wikia.nocookie.net/gray-zone-warfare/images/2/28/Majestic_Titanium_Watch_icon.png/revision/latest`,
+  "Modern Watch": `https://static.wikia.nocookie.net/gray-zone-warfare/images/b/ba/Modern_Watch_icon.png/revision/latest`,
+  "Perfect Pearl Earrings": `https://static.wikia.nocookie.net/gray-zone-warfare/images/7/79/Perfect_Pearl_Earrings_icon.png/revision/latest`,
+  "Platinum Ring": `https://static.wikia.nocookie.net/gray-zone-warfare/images/1/1d/Platinum_Ring_icon.png/revision/latest`,
+  "Sapphire Pendant": `https://static.wikia.nocookie.net/gray-zone-warfare/images/3/36/Sapphire_Pendant_icon.png/revision/latest`,
+  "Sleek Luxury Watch": `https://static.wikia.nocookie.net/gray-zone-warfare/images/a/a9/Sleek_Luxury_Watch_icon.png/revision/latest`,
+  "Master Carbon SEAL Automatic Watch": `https://static.wikia.nocookie.net/gray-zone-warfare/images/7/71/Master_Carbon_SEAL_Automatic_Watch_icon.png/revision/latest`,
+  "Black Luxury Phone": `https://static.wikia.nocookie.net/gray-zone-warfare/images/0/0b/Black_Luxury_Phone_icon.png/revision/latest`,
+  "Expensive Smartphone": `https://static.wikia.nocookie.net/gray-zone-warfare/images/c/ca/Expensive_Smartphone_icon.png/revision/latest`,
+  "Luxury Smartphone": `https://static.wikia.nocookie.net/gray-zone-warfare/images/d/df/Luxury_Smartphone_icon.png/revision/latest`,
+  "Smartphone": `https://static.wikia.nocookie.net/gray-zone-warfare/images/f/f1/Smartphone_icon.png/revision/latest`,
+  "Common Credit Card": `https://static.wikia.nocookie.net/gray-zone-warfare/images/0/04/Common_Credit_Card_icon.png/revision/latest`,
+  "Gold Credit Card": `https://static.wikia.nocookie.net/gray-zone-warfare/images/8/8c/Gold_Credit_Card_icon.png/revision/latest`,
+  "Platinum Credit Card": `https://static.wikia.nocookie.net/gray-zone-warfare/images/1/12/Platinum_Credit_Card_icon.png/revision/latest`,
+  "Black Credit Card": `https://static.wikia.nocookie.net/gray-zone-warfare/images/4/4d/Black_Credit_Card_icon.png/revision/latest`,
+  "Businessman ID Card": `https://static.wikia.nocookie.net/gray-zone-warfare/images/3/38/Businessman_ID_Card_icon.png/revision/latest`,
+  "Local ID Card": `https://static.wikia.nocookie.net/gray-zone-warfare/images/8/8e/Local_ID_Card_icon.png/revision/latest`,
+  "Driver's License": `https://static.wikia.nocookie.net/gray-zone-warfare/images/0/0a/Driver%27s_License_icon.png/revision/latest`,
+  "Tourist ID Card": `https://static.wikia.nocookie.net/gray-zone-warfare/images/9/9e/Tourist_ID_Card_icon.png/revision/latest`,
+  "Tourist Passport": `https://static.wikia.nocookie.net/gray-zone-warfare/images/5/57/Tourist_Passport_icon.png/revision/latest`,
+  "VIP Passport": `https://static.wikia.nocookie.net/gray-zone-warfare/images/4/4e/VIP_Passport_icon.png/revision/latest`,
+  "Army Intel": `https://static.wikia.nocookie.net/gray-zone-warfare/images/5/5e/Army_Intel_icon.png/revision/latest`,
+  "Crime-related Intel": `https://static.wikia.nocookie.net/gray-zone-warfare/images/7/7e/Crime-related_Intel_icon.png/revision/latest`,
+  "Digital Camera": `https://static.wikia.nocookie.net/gray-zone-warfare/images/4/4f/Digital_Camera_icon.png/revision/latest`,
+  "Laptop": `https://static.wikia.nocookie.net/gray-zone-warfare/images/8/8c/Laptop_icon.png/revision/latest`,
+  "Reflex Camera": `https://static.wikia.nocookie.net/gray-zone-warfare/images/5/5c/Reflex_Camera_icon.png/revision/latest`,
+  "Reinforced Military Laptop": `https://static.wikia.nocookie.net/gray-zone-warfare/images/6/6e/Reinforced_Military_Laptop_icon.png/revision/latest`,
+  "Encrypted Hard Disk Drive": `https://static.wikia.nocookie.net/gray-zone-warfare/images/e/e4/Encrypted_Hard_Disk_Drive_icon.png/revision/latest`,
+  "AN/PYQ-10": `https://static.wikia.nocookie.net/gray-zone-warfare/images/6/6e/AN-PYQ-10_icon.png/revision/latest`,
+  "AZART P1 Radio": `https://static.wikia.nocookie.net/gray-zone-warfare/images/a/a0/AZART_P1_Radio_icon.png/revision/latest`,
+  "Biometric Access Card": `https://static.wikia.nocookie.net/gray-zone-warfare/images/3/3e/Biometric_Access_Card_icon.png/revision/latest`,
+  "Biometric Thumb Drive": `https://static.wikia.nocookie.net/gray-zone-warfare/images/2/2e/Biometric_Thumb_Drive_icon.png/revision/latest`,
+  "C2 Military Laptop": `https://static.wikia.nocookie.net/gray-zone-warfare/images/6/6c/C2_Military_Laptop_icon.png/revision/latest`,
+  "Handheld ECM Jammer": `https://static.wikia.nocookie.net/gray-zone-warfare/images/9/9e/Handheld_ECM_Jammer_icon.png/revision/latest`,
+  "HGCS-30 UAV Control Station": `https://static.wikia.nocookie.net/gray-zone-warfare/images/5/5e/HGCS-30_UAV_Control_Station_icon.png/revision/latest`,
+  "KIK-11 Tactical Key Loader": `https://static.wikia.nocookie.net/gray-zone-warfare/images/4/4e/KIK-11_Tactical_Key_Loader_icon.png/revision/latest`,
+  "LTSD-4-3 Laser Designator": `https://static.wikia.nocookie.net/gray-zone-warfare/images/6/6b/LTSD-4-3_Laser_Designator_icon.png/revision/latest`,
+  "NPI-2 Navigation Receiver": `https://static.wikia.nocookie.net/gray-zone-warfare/images/5/5c/NPI-2_Navigation_Receiver_icon.png/revision/latest`,
+  "One-Time Pad Key Sheets": `https://static.wikia.nocookie.net/gray-zone-warfare/images/3/3e/One-Time_Pad_Key_Sheets_icon.png/revision/latest`,
+  "Operation Data Encrypted Hard Disk": `https://static.wikia.nocookie.net/gray-zone-warfare/images/e/e4/Encrypted_Hard_Disk_Drive_icon.png/revision/latest`,
+  "PBG-01+ UAV Control Station": `https://static.wikia.nocookie.net/gray-zone-warfare/images/6/6e/PBG-01%2B_UAV_Control_Station_icon.png/revision/latest`,
+  "Rugged Military Tablet": `https://static.wikia.nocookie.net/gray-zone-warfare/images/8/8e/Rugged_Military_Tablet_icon.png/revision/latest`,
+  "Signal Repeater RT97S": `https://static.wikia.nocookie.net/gray-zone-warfare/images/3/3e/Signal_Repeater_RT97S_icon.png/revision/latest`,
+  "STRELETS-M Tablet": `https://static.wikia.nocookie.net/gray-zone-warfare/images/4/4e/STRELETS-M_Tablet_icon.png/revision/latest`,
+  "GLONASS Grot-M Navigation Receiver": `https://static.wikia.nocookie.net/gray-zone-warfare/images/6/6e/GLONASS_Grot-M_Navigation_Receiver_icon.png/revision/latest`,
+  "R-438 Barrier-T": `https://static.wikia.nocookie.net/gray-zone-warfare/images/4/4c/R-438_Barrier-T_icon.png/revision/latest`,
+  "ATM Hacking Tool": `https://static.wikia.nocookie.net/gray-zone-warfare/images/5/5e/ATM_Hacking_Tool_icon.png/revision/latest`,
+  "Camouflage Fabric": `https://static.wikia.nocookie.net/gray-zone-warfare/images/2/2e/Camouflage_Fabric_icon.png/revision/latest`,
+  "Low-Grade Gunpowder": `https://static.wikia.nocookie.net/gray-zone-warfare/images/3/3c/Low-Grade_Gunpowder_icon.png/revision/latest`,
+  "Paracord": `https://static.wikia.nocookie.net/gray-zone-warfare/images/4/4e/Paracord_icon.png/revision/latest`,
+  "Weapon Oil": `https://static.wikia.nocookie.net/gray-zone-warfare/images/5/5e/Weapon_Oil_icon.png/revision/latest`,
+  "Aramid Cloth": `https://static.wikia.nocookie.net/gray-zone-warfare/images/2/2c/Aramid_Cloth_icon.png/revision/latest`,
+  "Drain Cleaner": `https://static.wikia.nocookie.net/gray-zone-warfare/images/3/3e/Drain_Cleaner_icon.png/revision/latest`,
+  "Industrial Solvent": `https://static.wikia.nocookie.net/gray-zone-warfare/images/4/4e/Industrial_Solvent_icon.png/revision/latest`,
+  "Sulfuric Acid": `https://static.wikia.nocookie.net/gray-zone-warfare/images/5/5e/Sulfuric_Acid_icon.png/revision/latest`,
+  "Thermal Blanket": `https://static.wikia.nocookie.net/gray-zone-warfare/images/6/6e/Thermal_Blanket_icon.png/revision/latest`,
+  "UN Medical Tools": `https://static.wikia.nocookie.net/gray-zone-warfare/images/7/7e/UN_Medical_Tools_icon.png/revision/latest`,
+  "Vial of Antigens": `https://static.wikia.nocookie.net/gray-zone-warfare/images/8/8e/Vial_of_Antigens_icon.png/revision/latest`,
+  "Water Purification Tablets": `https://static.wikia.nocookie.net/gray-zone-warfare/images/9/9e/Water_Purification_Tablets_icon.png/revision/latest`,
+  "Disinfectant": `https://static.wikia.nocookie.net/gray-zone-warfare/images/a/a0/Disinfectant_icon.png/revision/latest`,
+  "Brake Fluid": `https://static.wikia.nocookie.net/gray-zone-warfare/images/2/2e/Brake_Fluid_icon.png/revision/latest`,
+  "Broken Angle Grinder": `https://static.wikia.nocookie.net/gray-zone-warfare/images/3/3e/Broken_Angle_Grinder_icon.png/revision/latest`,
+  "Broken Carpentry Hammer": `https://static.wikia.nocookie.net/gray-zone-warfare/images/4/4e/Broken_Carpentry_Hammer_icon.png/revision/latest`,
+  "Broken Handsaw": `https://static.wikia.nocookie.net/gray-zone-warfare/images/5/5e/Broken_Handsaw_icon.png/revision/latest`,
+  "Broken Jigsaw": `https://static.wikia.nocookie.net/gray-zone-warfare/images/6/6e/Broken_Jigsaw_icon.png/revision/latest`,
+  "Broken Nailgun": `https://static.wikia.nocookie.net/gray-zone-warfare/images/7/7e/Broken_Nailgun_icon.png/revision/latest`,
+  "Broken Screwdriver": `https://static.wikia.nocookie.net/gray-zone-warfare/images/8/8e/Broken_Screwdriver_icon.png/revision/latest`,
+  "Fuel Canister": `https://static.wikia.nocookie.net/gray-zone-warfare/images/9/9e/Fuel_Canister_icon.png/revision/latest`,
+  "Jumper Cables": `https://static.wikia.nocookie.net/gray-zone-warfare/images/a/a0/Jumper_Cables_icon.png/revision/latest`,
+  "Motor Oil": `https://static.wikia.nocookie.net/gray-zone-warfare/images/b/b0/Motor_Oil_icon.png/revision/latest`,
+  "Multitool": `https://static.wikia.nocookie.net/gray-zone-warfare/images/c/c0/Multitool_icon.png/revision/latest`,
+  "Rubber Renue": `https://static.wikia.nocookie.net/gray-zone-warfare/images/d/d0/Rubber_Renue_icon.png/revision/latest`,
+  "Toolset": `https://static.wikia.nocookie.net/gray-zone-warfare/images/e/e0/Toolset_icon.png/revision/latest`,
+  "White Lithium Grease": `https://static.wikia.nocookie.net/gray-zone-warfare/images/f/f0/White_Lithium_Grease_icon.png/revision/latest`,
+  "Bleach": `https://static.wikia.nocookie.net/gray-zone-warfare/images/2/2e/Bleach_icon.png/revision/latest`,
+  "Carton of Tahirs Cigarettes": `https://static.wikia.nocookie.net/gray-zone-warfare/images/3/3e/Carton_of_Tahirs_Cigarettes_icon.png/revision/latest`,
+  "Deck of Cards": `https://static.wikia.nocookie.net/gray-zone-warfare/images/4/4e/Deck_of_Cards_icon.png/revision/latest`,
+  "Fishing Line": `https://static.wikia.nocookie.net/gray-zone-warfare/images/5/5e/Fishing_Line_icon.png/revision/latest`,
+  "Hand Mirror": `https://static.wikia.nocookie.net/gray-zone-warfare/images/6/6e/Hand_Mirror_icon.png/revision/latest`,
+  "Insect Repellant Spray": `https://static.wikia.nocookie.net/gray-zone-warfare/images/7/7e/Insect_Repellant_Spray_icon.png/revision/latest`,
+  "Lamp Oil": `https://static.wikia.nocookie.net/gray-zone-warfare/images/8/8e/Lamp_Oil_icon.png/revision/latest`,
+  "Lighter": `https://static.wikia.nocookie.net/gray-zone-warfare/images/9/9e/Lighter_icon.png/revision/latest`,
+  "Motorbike Battery": `https://static.wikia.nocookie.net/gray-zone-warfare/images/a/a0/Motorbike_Battery_icon.png/revision/latest`,
+  "Naosaoad 100% Clean": `https://static.wikia.nocookie.net/gray-zone-warfare/images/b/b0/Naosaoad_100%25_Clean_icon.png/revision/latest`,
+  "Pack of AA Batteries": `https://static.wikia.nocookie.net/gray-zone-warfare/images/c/c0/Pack_of_AA_Batteries_icon.png/revision/latest`,
+  "Pack of Premium Coffee": `https://static.wikia.nocookie.net/gray-zone-warfare/images/d/d0/Pack_of_Premium_Coffee_icon.png/revision/latest`,
+  "Petrolatum": `https://static.wikia.nocookie.net/gray-zone-warfare/images/e/e0/Petrolatum_icon.png/revision/latest`,
+  "Phone Charger": `https://static.wikia.nocookie.net/gray-zone-warfare/images/f/f0/Phone_Charger_icon.png/revision/latest`,
+  "Propane Bottle": `https://static.wikia.nocookie.net/gray-zone-warfare/images/0/0a/Propane_Bottle_icon.png/revision/latest`,
+  "Refillable Lighter": `https://static.wikia.nocookie.net/gray-zone-warfare/images/1/1a/Refillable_Lighter_icon.png/revision/latest`,
+  "Sewing Set": `https://static.wikia.nocookie.net/gray-zone-warfare/images/2/2a/Sewing_Set_icon.png/revision/latest`,
+  "Tahirs Cigarettes": `https://static.wikia.nocookie.net/gray-zone-warfare/images/3/3a/Tahirs_Cigarettes_icon.png/revision/latest`,
+  "Car Battery": `https://static.wikia.nocookie.net/gray-zone-warfare/images/4/4a/Car_Battery_icon.png/revision/latest`
+};
+
 items.forEach(item => {
   const dim = item.size.split('x');
   const slots = parseInt(dim[0]) * parseInt(dim[1]);
   item.pricePerSlot = Math.round(item.price / slots);
+  item.img = itemImages[item.name] || '';
 });
 
 const categories = [...new Set(items.map(i => i.category))].sort();
@@ -536,7 +713,7 @@ function render() {
       const inBag = bag.has(i.name);
       const bagEntry = inBag ? bag.get(i.name) : null;
       return `<tr>
-        <td>${i.name}</td>
+        <td style="display:flex;align-items:center;gap:8px;">${i.img ? `<img class="item-img" src="${i.img}" alt="${i.name}" onclick="openImgModal('${i.img.replace(/'/g,"\\'")}','${i.name.replace(/'/g,"\\'")}');event.stopPropagation();" onerror="this.style.display='none'"/>` : '<div class=\"img-placeholder\"></div>'} ${i.name}</td>
         <td>${badge(i.category)}</td>
         <td style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--dim)">${i.size}</td>
         <td style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--dim)">${wt}</td>
@@ -569,7 +746,308 @@ window.sortBy = function(key) {
 document.getElementById('search').addEventListener('input', render);
 document.getElementById('catFilter').addEventListener('change', render);
 document.getElementById('traderFilter').addEventListener('change', render);
-render();
+</script>
+
+</div><!-- end tab-loot -->
+
+<!-- KEYS TAB -->
+<div id="tab-keys" class="tab-panel">
+
+<div class="keys-toolbar">
+  <input type="text" id="keySearch" placeholder="Search keys..." id="keySearchInput" style="flex:1;min-width:180px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;padding:8px 12px;outline:none;" />
+  <select id="keyLocation"  style="min-width:180px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;padding:8px 12px;outline:none;cursor:pointer;">
+    <option value="">All locations</option>
+    <option>Ban Pa</option><option>Blue Lagoon</option><option>Fort Narith</option>
+    <option>Hunter's Paradise</option><option>Kiu Vongsa</option><option>Lamang</option>
+    <option>Midnight Sapphire</option><option>Nam Thaven</option><option>Pha Lang</option>
+    <option>Pha Lang Airfield</option><option>Sawmill</option><option>Tiger Bay</option><option>YBL</option>
+  </select>
+  <select id="keyFilter"  style="min-width:160px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;padding:8px 12px;outline:none;cursor:pointer;">
+    <option value="">All types</option>
+    <option value="static">Static Spawn</option>
+    <option value="task">Task Related</option>
+  </select>
+</div>
+<div class="keys-grid" id="keysGrid"></div>
+<div id="keysNoResults" class="no-results" style="display:none;padding:3rem;text-align:center;color:var(--dim);">NO KEYS MATCH YOUR FILTERS</div>
+
+
+</div>
+
+<!-- TASKS TAB -->
+<div id="tab-tasks" class="tab-panel">
+
+<div class="tasks-stats" id="taskStats"></div>
+<div class="tasks-toolbar">
+  <input type="text" id="taskSearch" placeholder="Search tasks..." id="taskSearchInput" style="flex:1;min-width:180px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;padding:8px 12px;outline:none;" />
+  <select id="taskTrader"  style="min-width:160px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;padding:8px 12px;outline:none;cursor:pointer;">
+    <option value="">All traders</option>
+    <option>Artisan</option><option>Banshee</option><option>Gunny</option>
+    <option>Handshake</option><option>LabRat</option><option>Turncoat</option><option>Vulture</option>
+  </select>
+  <select id="taskStatus"  style="min-width:140px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;padding:8px 12px;outline:none;cursor:pointer;">
+    <option value="">All tasks</option>
+    <option value="done">Completed</option>
+    <option value="todo">Not done</option>
+  </select>
+  <button onclick="clearAllTasks()" style="background:transparent;border:1px solid rgba(220,80,80,0.3);color:rgba(220,80,80,0.6);font-family:'Rajdhani',sans-serif;font-size:12px;letter-spacing:0.08em;padding:8px 14px;cursor:pointer;">RESET ALL</button>
+</div>
+<div class="tasks-list" id="tasksList"></div>
+
+
+</div>
+
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+  document.getElementById("tab-" + name).classList.add("active");
+  event.currentTarget.classList.add("active");
+}
+document.querySelector(".nav-tab").classList.add("active");
+document.getElementById("tab-loot").classList.add("active");
+
+const keysData = [
+  {name:"BP Elder",location:"Ban Pa",desc:"A key to the elder house in Ban Pa.",static:true,task:true},
+  {name:"BP ElderRm",location:"Ban Pa",desc:"A key to a room inside the Elder House in Ban Pa.",static:true,task:true},
+  {name:"BP Hut",location:"Ban Pa",desc:"A key to one of the fishing huts in Ban Pa.",static:true,task:false},
+  {name:"BP Ware",location:"Ban Pa",desc:"A key to a warehouse in Ban Pa.",static:false,task:false},
+  {name:"BL Office",location:"Blue Lagoon",desc:"Key to storage room in Blue Lagoon office.",static:false,task:false},
+  {name:"BL Shack",location:"Blue Lagoon",desc:"A key to the back room of an old shack in the Blue Lagoon.",static:true,task:true},
+  {name:"BL Strg",location:"Blue Lagoon",desc:"A key to a storage room of a restaurant in the Blue Lagoon.",static:false,task:false},
+  {name:"FN A103",location:"Fort Narith",desc:"A key to the A103 room in Fort Narith barracks.",static:false,task:false},
+  {name:"FN A208",location:"Fort Narith",desc:"A key to Fort Narith armory room A208.",static:false,task:false},
+  {name:"FN A210",location:"Fort Narith",desc:"A key to Fort Narith armory room A210.",static:false,task:false},
+  {name:"FN Arch",location:"Fort Narith",desc:"A key to the archives room at Fort Narith.",static:true,task:true},
+  {name:"FN ATC",location:"Fort Narith",desc:"A key to the air traffic control tower at Fort Narith.",static:false,task:false},
+  {name:"FN C101",location:"Fort Narith",desc:"A key to Fort Narith cell block room C101.",static:false,task:false},
+  {name:"FN C108",location:"Fort Narith",desc:"A key to Fort Narith cell block room C108.",static:false,task:false},
+  {name:"FN Dump",location:"Fort Narith",desc:"A key to a shed in the dumping ground north of Fort Narith.",static:false,task:false},
+  {name:"FN GOfc",location:"Fort Narith",desc:"A key to the garage office in Fort Narith.",static:false,task:false},
+  {name:"FN HQRec",location:"Fort Narith",desc:"A key to the storage room behind the reception desk at Fort Narith HQ.",static:false,task:false},
+  {name:"FN HQStrg",location:"Fort Narith",desc:"A key to a storage room located in Fort Narith HQ.",static:false,task:false},
+  {name:"FN ICU",location:"Fort Narith",desc:"A key to the Intensive Care Unit inside Fort Narith infirmary, second floor.",static:true,task:true},
+  {name:"FN Motel",location:"Fort Narith",desc:"A key to a motel in the Fort Narith outskirts.",static:false,task:false},
+  {name:"FN OArm",location:"Fort Narith",desc:"A key to an improvised bandit armory hidden in a house nearby Fort Narith.",static:false,task:false},
+  {name:"FN OR",location:"Fort Narith",desc:"An access card to the Fort Narith Operations Room.",static:false,task:true},
+  {name:"FN SROfc",location:"Fort Narith",desc:"A key to the shooting range office in Fort Narith.",static:false,task:false},
+  {name:"FN TrnHouse",location:"Fort Narith",desc:"A key to Turncoat house nearby Fort Narith.",static:true,task:true},
+  {name:"HP 101",location:"Hunters Paradise",desc:"A key to motel room 101 in Hunters Paradise.",static:true,task:false},
+  {name:"HP 102",location:"Hunters Paradise",desc:"A key to motel room 102 in Hunters Paradise.",static:true,task:false},
+  {name:"HP 104",location:"Hunters Paradise",desc:"A key to an improvised armory in the Hunters Paradise Motel.",static:false,task:false},
+  {name:"HP Bunk",location:"Hunters Paradise",desc:"A key for the small bunker near Hunters Paradise.",static:false,task:false},
+  {name:"HP Lines",location:"Hunters Paradise",desc:"A key to a storage room near the shooting lines at Hunters Paradise.",static:false,task:false},
+  {name:"HP Wep",location:"Hunters Paradise",desc:"A key for the weapon storage room in Hunters Paradise.",static:true,task:true},
+  {name:"SCH Cot",location:"Hunters Paradise",desc:"A key to one of the cottages next to Sunset Chalet.",static:true,task:true},
+  {name:"KV Attic",location:"Kiu Vongsa",desc:"A key for the attic storage space of a restaurant in Kiu Vongsa.",static:true,task:true},
+  {name:"KV Doc",location:"Kiu Vongsa",desc:"A key for the local doctor office in Kiu Vongsa.",static:true,task:true},
+  {name:"KV Fin",location:"Kiu Vongsa",desc:"A key to the finance department of the Kiu Vongsa town hall.",static:false,task:false},
+  {name:"KV Lumber",location:"Kiu Vongsa",desc:"A key to the Kiu Vongsa lumberyard maintenance room.",static:false,task:false},
+  {name:"KV MarOfc",location:"Kiu Vongsa",desc:"A key for an office in the Kiu Vongsa marketplace.",static:false,task:false},
+  {name:"KV OVB",location:"Kiu Vongsa",desc:"A key for a bedroom inside the occupied villa.",static:false,task:false},
+  {name:"BK House",location:"Lamang",desc:"A key to a house in Ban Khamphet.",static:false,task:false},
+  {name:"BP Room",location:"Lamang",desc:"A key to a top-floor room in a house in Ban Phouphienge.",static:false,task:false},
+  {name:"CS Strg",location:"Lamang",desc:"A key to one of the containers at the construction site near Kiu Vongsa.",static:false,task:false},
+  {name:"DHC Cottage",location:"Lamang",desc:"A key to a cottage in the Dongphou Hiking Camp.",static:false,task:false},
+  {name:"FP Ofc",location:"Lamang",desc:"A key to the manager office in Fanny Paradise.",static:false,task:false},
+  {name:"HF2 Hut",location:"Lamang",desc:"A key to a hut near hidden poppy fields north of Ground Zero.",static:false,task:false},
+  {name:"HF3 Hut",location:"Lamang",desc:"A key to a hut near hidden poppy fields south of Ground Zero.",static:false,task:false},
+  {name:"IF Shed",location:"Lamang",desc:"A key to storage shed at Inthavong farm.",static:false,task:false},
+  {name:"KRD Room",location:"Lamang",desc:"A key to a room in the Khamhao Rice Depot main warehouse.",static:false,task:false},
+  {name:"KVM Room",location:"Lamang",desc:"A key to a top-floor room in the Kiu Vongsa mayor mansion.",static:false,task:false},
+  {name:"KW House",location:"Lamang",desc:"A key to a house in Khonwan Village.",static:false,task:false},
+  {name:"PR Attic",location:"Lamang",desc:"A key to a top-floor room in Phouarun restaurant.",static:false,task:false},
+  {name:"RT Room",location:"Lamang",desc:"A key to a storage room in the LAF radio tower main building.",static:false,task:false},
+  {name:"S Room",location:"Lamang",desc:"A key to a room in the main building of a school repurposed as a UNLRA evac center.",static:false,task:false},
+  {name:"SC Case",location:"Lamang",desc:"A key to a firearms case in the Sunset Chalet.",static:false,task:false},
+  {name:"SMP House",location:"Lamang",desc:"A key to a house near a small marketplace southwest of Pha Lang Airfield.",static:false,task:false},
+  {name:"SRS Room",location:"Lamang",desc:"A key to a top-floor room in the Siang Radio Station.",static:true,task:false},
+  {name:"VV Room",location:"Lamang",desc:"A key to a top-floor room in Villa Vongphet.",static:false,task:false},
+  {name:"MS AnnaJana",location:"Midnight Sapphire",desc:"A key to villa Anna Jana in the Midnight Sapphire Resort.",static:true,task:true},
+  {name:"MS ElenaGar",location:"Midnight Sapphire",desc:"A key to the garage of villa Elena in the Midnight Sapphire Resort.",static:false,task:false},
+  {name:"MS EmOfc",location:"Midnight Sapphire",desc:"A key to an office in the employee housing section of Midnight Sapphire. Building does not exist yet.",static:true,task:true},
+  {name:"MS GCStor",location:"Midnight Sapphire",desc:"A key to the Midnight Sapphire Golf Club storage room.",static:false,task:false},
+  {name:"MS Kate",location:"Midnight Sapphire",desc:"A key to Villa Katherine in the Midnight Sapphire Resort.",static:true,task:false},
+  {name:"MS Luisa",location:"Midnight Sapphire",desc:"A key to Villa Luisa in the Midnight Sapphire Resort.",static:true,task:true},
+  {name:"MS MMGar",location:"Midnight Sapphire",desc:"A key to the garage of villa Marta Monica in the Midnight Sapphire Resort.",static:false,task:false},
+  {name:"MSH Ofc",location:"Midnight Sapphire",desc:"A key to one of the offices in the Midnight Sapphire Hotel.",static:false,task:false},
+  {name:"MSH PR",location:"Midnight Sapphire",desc:"A key to the Party Room in one of the suites at the Midnight Sapphire Hotel.",static:false,task:true},
+  {name:"MSH Supply",location:"Midnight Sapphire",desc:"A key card to a supply closet in the Midnight Sapphire Hotel.",static:true,task:true},
+  {name:"NT Attic",location:"Nam Thaven",desc:"A key for the attic storage space of a restaurant in Nam Thaven.",static:true,task:true},
+  {name:"NT Doc",location:"Nam Thaven",desc:"A key for the local doctor office in Nam Thaven.",static:true,task:true},
+  {name:"NT Fin",location:"Nam Thaven",desc:"An access card to the finance department of the Nam Thaven town hall.",static:false,task:false},
+  {name:"NT Lumber",location:"Nam Thaven",desc:"A key to the Nam Thaven lumberyard maintenance room.",static:false,task:false},
+  {name:"NT MarOfc",location:"Nam Thaven",desc:"A key for an office in the Nam Thaven marketplace.",static:false,task:false},
+  {name:"NT OVB",location:"Nam Thaven",desc:"A key for a bedroom inside the occupied villa.",static:false,task:false},
+  {name:"PL Attic",location:"Pha Lang",desc:"A key for the attic storage space of a restaurant in Pha Lang.",static:true,task:true},
+  {name:"PL Doc",location:"Pha Lang",desc:"A key for the local doctor office in Pha Lang.",static:true,task:true},
+  {name:"PL Fin",location:"Pha Lang",desc:"An access card to the finance department of the Pha Lang town hall.",static:false,task:false},
+  {name:"PL Lumber",location:"Pha Lang",desc:"A key to the Pha Lang lumberyard maintenance room.",static:false,task:false},
+  {name:"PL MarOfc",location:"Pha Lang",desc:"A key for an office in the Pha Lang marketplace.",static:false,task:false},
+  {name:"PL OVB",location:"Pha Lang",desc:"A key for a bedroom inside the occupied villa.",static:false,task:false},
+  {name:"PLA H03",location:"Pha Lang Airfield",desc:"A key to Hangar 03 at the Pha Lang Airfield.",static:true,task:true},
+  {name:"PLA Meet",location:"Pha Lang Airfield",desc:"A key to the meeting room in the Pha Lang Airfield main building.",static:false,task:false},
+  {name:"PLA Shed",location:"Pha Lang Airfield",desc:"A key to the storage shed located near the Pha Lang Airfield terminal.",static:false,task:false},
+  {name:"PLA Strg",location:"Pha Lang Airfield",desc:"Key to the office room in the storage building at the Pha Lang Airfield.",static:false,task:true},
+  {name:"SSGH Bas",location:"Pha Lang Airfield",desc:"A key to the basement of Sunny Skies Guest House.",static:true,task:false},
+  {name:"SM Ofc",location:"Sawmill",desc:"A key for the office building at the Tonmai Hainy Lumber Company.",static:true,task:false},
+  {name:"SM OStrg",location:"Sawmill",desc:"A key to an office storage room at the Tonmai Hainy Lumber Company.",static:true,task:true},
+  {name:"SM Strg",location:"Sawmill",desc:"A key to a storage shed at the Tonmai Hainy Lumber Company.",static:false,task:false},
+  {name:"SM Toi",location:"Sawmill",desc:"A key to the toilets at the Tonmai Hainy Lumber Company.",static:true,task:false},
+  {name:"TB CemStr",location:"Tiger Bay",desc:"A key to a cement factory storage room in Tiger Bay.",static:true,task:true},
+  {name:"TB Depot",location:"Tiger Bay",desc:"A key to an office in the Tiger Bay Trade Depot.",static:false,task:false},
+  {name:"TB HBTP",location:"Tiger Bay",desc:"A key to a house situated next to a pond in Tiger Bay.",static:true,task:true},
+  {name:"TB Lookout",location:"Tiger Bay",desc:"A key to a house used by the bandits to keep eyes on Tiger Bay Central.",static:false,task:false},
+  {name:"TB MOS",location:"Tiger Bay",desc:"A key to a makeshift storage room in the Tiger Bay Municipal Office building.",static:false,task:false},
+  {name:"TB Pier",location:"Tiger Bay",desc:"A key to a storage shed on the pier near the UNLRA camp in Tiger Bay.",static:false,task:false},
+  {name:"TB UNCon",location:"Tiger Bay",desc:"A key to an UNLRA equipment shipping container in Tiger Bay.",static:false,task:false},
+  {name:"TB UNLab",location:"Tiger Bay",desc:"A key for the UNLRA HQ laboratory in Tiger Bay.",static:true,task:true},
+  {name:"TB UNMed",location:"Tiger Bay",desc:"A key to an UNLRA medical shipping container in Tiger Bay.",static:false,task:false},
+  {name:"TB UNOf",location:"Tiger Bay",desc:"An access card to one of the offices inside the UNLRA HQ in Tiger Bay.",static:true,task:true},
+  {name:"TB UNQr",location:"Tiger Bay",desc:"A key for the UNLRA quarantine section in Tiger Bay.",static:true,task:true},
+  {name:"TBC Arm",location:"Tiger Bay",desc:"A key to an improvised armory inside Tiger Bay Central.",static:false,task:false},
+  {name:"TBC Toto",location:"Tiger Bay",desc:"A key to Toto Hardware storage room in Tiger Bay Central.",static:true,task:false},
+  {name:"TBO Garage",location:"Tiger Bay",desc:"A key to a garage in the outskirts southwest of Tiger Bay.",static:false,task:false},
+  {name:"YBL Bed",location:"YBL",desc:"A key to the first floor bedroom in YBL-1.",static:false,task:false},
+  {name:"YBL Gen",location:"YBL",desc:"A key to the generator room in YBL-1.",static:true,task:true},
+  {name:"YBL Main",location:"YBL",desc:"A key to the maintenance entrance to YBL-1.",static:true,task:false},
+  {name:"YBL Ofc1",location:"YBL",desc:"A key to office 01 in YBL-1.",static:false,task:true},
+  {name:"YBL Ofc2",location:"YBL",desc:"A key to office 02 in YBL-1.",static:true,task:true},
+  {name:"YBL Strg",location:"YBL",desc:"A key to the storage room in YBL-1.",static:false,task:false},
+  {name:"YBL Wep",location:"YBL",desc:"A key to the weapon storage room in YBL-1.",static:false,task:false}
+];
+
+function filterKeys() {
+  const search = document.getElementById('keySearch').value.toLowerCase();
+  const loc = document.getElementById('keyLocation').value;
+  const type = document.getElementById('keyFilter').value;
+  const grid = document.getElementById('keysGrid');
+  const noRes = document.getElementById('keysNoResults');
+  const filtered = keysData.filter(k => {
+    if (search && !k.name.toLowerCase().includes(search) && !k.desc.toLowerCase().includes(search) && !k.location.toLowerCase().includes(search)) return false;
+    if (loc && k.location !== loc) return false;
+    if (type === 'static' && !k.static) return false;
+    if (type === 'task' && !k.task) return false;
+    return true;
+  });
+  if (!filtered.length) { grid.innerHTML=''; noRes.style.display='block'; return; }
+  noRes.style.display='none';
+  grid.innerHTML = filtered.map(k => {
+    const tags = [];
+    if (k.static) tags.push('<span class="key-tag tag-static">Static Spawn</span>');
+    if (k.task) tags.push('<span class="key-tag tag-task">Task</span>');
+    tags.push('<span class="key-tag tag-location">' + k.location + '</span>');
+    return '<div class="key-card"><div class="key-name">' + k.name + '</div><div class="key-desc">' + k.desc + '</div><div class="key-tags">' + tags.join('') + '</div></div>';
+  }).join('');
+}
+filterKeys();
+
+const tasksData = {
+  'Artisan': [{n:`Artisan's List`,v:'0.4'},{n:`Artisan's List II`,v:'0.4'},{n:`At the Mounds of Madness`,v:'0.4'},{n:`Crime Doesn't Pay`,v:'0.4'},{n:`Deep Waters`,v:''},{n:`Don't Speak`,v:'0.4'},{n:`Draw No Bet`,v:'0.4'},{n:`Evacuation Question`,v:'0.4'},{n:`Freedom For All`,v:'0.4'},{n:`Garbage Disposal`,v:'0.4'},{n:`Girls Just Wanna Have Fun`,v:'0.4'},{n:`Handyman`,v:'0.4'},{n:`Last Flight`,v:'0.4'},{n:`Last Letter`,v:'0.4'},{n:`Letter From Beyond`,v:'0.4'},{n:`Like A Boss - Colonel's Type 51`,v:'0.4'},{n:`Like A Boss - Naga's Type 51`,v:'0.4'},{n:`Lost Hope`,v:'0.4'},{n:`Mercenary Delivery Service II`,v:'0.4'},{n:`Mercenary Delivery Service III`,v:'0.4'},{n:`Missing Colleague`,v:'0.4'},{n:`Missing Colleague II`,v:'0.4'},{n:`Prisoner 23`,v:'0.4'},{n:`Save the Rebellion`,v:''},{n:`Silent Village`,v:'0.4'},{n:`Snow White`,v:''},{n:`The Call of Phi Pa Mum`,v:'0.4'},{n:`The Mistress`,v:'0.4'},{n:`Tools of the Trade`,v:''},{n:`When a Tree Falls`,v:'0.4'}],
+  'Banshee': [{n:`A Shot in the Dark`,v:'0.4'},{n:`Atrocity Probe`,v:'0.4'},{n:`Baked`,v:'0.4'},{n:`Buried On Paper`,v:'0.4',locked:true},{n:`Crash`,v:'0.4'},{n:`Deal of the Century`,v:'0.4'},{n:`Deep Depravity`,v:'',locked:true},{n:`Dirt Digger`,v:'0.4',locked:true},{n:`EOD`,v:'0.4'},{n:`Felony and Punishment`,v:'0.4'},{n:`Harvest Moon`,v:'0.4'},{n:`Jets'n'Marks`,v:'0.4'},{n:`Lamang Connection`,v:'0.4'},{n:`Like A Boss - Yen's M700`,v:'0.4'},{n:`Livestock`,v:'0.4',locked:true},{n:`Mysterious Justice`,v:'0.4'},{n:`Mysterious Justice II`,v:'0.4'},{n:`Mysterious Justice IX`,v:'0.4'},{n:`No Escape`,v:'0.4',locked:true},{n:`Noble Powder`,v:'0.4',locked:true},{n:`Sanctioned Exploitation`,v:'0.4',locked:true},{n:`State of Weapon Shipment`,v:'0.4'},{n:`Sunny Skies`,v:'0.4'},{n:`Timber`,v:''},{n:`Unstable Meeting`,v:'0.4'},{n:`What Was Left`,v:'0.4'}],
+  'Gunny': [{n:`A Single Drop`,v:'0.4'},{n:`Aye Aye, Captain`,v:'0.4'},{n:`Breadcrumbs`,v:'0.4'},{n:`Cache Report`,v:'0.4'},{n:`Cache Report IV`,v:'0.4'},{n:`Cache Report IX`,v:'0.4'},{n:`Cache Retrieval`,v:''},{n:`Cutbacks`,v:'0.4'},{n:`Expansion`,v:'0.4'},{n:`Fire and Water`,v:'0.4'},{n:`Freedom Fighter`,v:'0.4',locked:true},{n:`From The Sky`,v:'0.4'},{n:`Fuel Shortage`,v:'0.4'},{n:`Goods Hunting`,v:'0.4'},{n:`Guns & Ammo`,v:'0.4',locked:true},{n:`Hoarder`,v:''},{n:`Incognito`,v:'0.4'},{n:`Know Your Enemy`,v:'0.4',locked:true},{n:`Last Farewell`,v:'0.4'},{n:`Last Farewell II`,v:'0.4'},{n:`Leave No Man Behind`,v:''},{n:`Like A Boss - Broker's M9A1`,v:'0.4',locked:true},{n:`Like A Boss - Kaptei's Glock 17`,v:'0.4'},{n:`Line in the Sand`,v:'0.4'},{n:`Lost Girl`,v:'0.4'},{n:`Medical Detective`,v:'',locked:true},{n:`Needle in a Jungle`,v:'0.4'},{n:`Neighborly Help`,v:'0.4'},{n:`Nicked Shipment`,v:'0.4'},{n:`No Bullshit II`,v:'0.4'},{n:`No Way Up`,v:'0.4'},{n:`Observation Duty`,v:'0.4'},{n:`Propaganda Problems`,v:'0.4'},{n:`Questionable Shipment`,v:'0.4'},{n:`Skycrawlers`,v:'0.4'},{n:`Snooper`,v:'0.4'},{n:`Sunken Bird`,v:'0.4'},{n:`Supernatural`,v:'0.4'},{n:`The Lull`,v:'0.4'},{n:`The Negotiator`,v:'0.4',locked:true},{n:`The Rebel Path`,v:''},{n:`The Stand`,v:'0.4'},{n:`They Are Everywhere`,v:'0.4'},{n:`Under Our Noses`,v:'0.4'},{n:`Unnameable`,v:'0.4'},{n:`Wanted Man`,v:'0.4'},{n:`Wanted Man II`,v:''}],
+  'Handshake': [{n:`Bad Idea`,v:'0.4'},{n:`Big Fish`,v:'0.4',locked:true},{n:`Business or Pleasure`,v:'0.4'},{n:`Celebrity Crash`,v:'0.4',locked:true},{n:`Combat Sweep`,v:'0.4'},{n:`Combat Sweep III`,v:'0.4'},{n:`Combat Sweep IV`,v:'0.4'},{n:`Deepest, Darkest Fantasies`,v:'0.4'},{n:`Domesticated Rat`,v:'0.4'},{n:`Final Check Out`,v:'0.4'},{n:`First Recon`,v:''},{n:`Fort Narith Stroll`,v:'0.4'},{n:`Fresh Meat`,v:'0.4',locked:true},{n:`Hacker`,v:'0.4'},{n:`Hazardous Treasures`,v:'0.4',locked:true},{n:`Helping Hand`,v:'',locked:true},{n:`Hide and Seek`,v:'0.4',locked:true},{n:`Hustling The Hustler`,v:'0.4'},{n:`I went, I saw, I conquered`,v:'0.4',locked:true},{n:`Irrefusable Offer`,v:'0.4'},{n:`King of the Crossroads`,v:'0.4'},{n:`Last Resort`,v:''},{n:`Left Behind`,v:'0.4'},{n:`Left Behind II`,v:'0.4'},{n:`Lip Out`,v:'0.4'},{n:`Little Bird Down`,v:''},{n:`Madnight Sapphire`,v:'0.4'},{n:`Mire Job`,v:'0.4'},{n:`Missing Children`,v:'0.4'},{n:`Moonlighting II`,v:'0.4'},{n:`Mr. Nice Guy`,v:'0.4'},{n:`Muddy Buddy`,v:'0.4'},{n:`New Neighbors`,v:'0.4'},{n:`Paparazzi`,v:'0.4',locked:true},{n:`Paranoia Agent`,v:''},{n:`Plan B`,v:'0.4'},{n:`Priceless Possessions`,v:'0.4'},{n:`Problem Solver`,v:'0.4'},{n:`Radio Silence`,v:''},{n:`Radio Star`,v:''},{n:`Rat's Nest`,v:''},{n:`Reclamation`,v:''},{n:`Repossession V`,v:'0.4'},{n:`Revolutionary Road`,v:'0.4'},{n:`Sisyphus`,v:'0.4'},{n:`Terminal Initiative`,v:'0.4',locked:true},{n:`The Art of Deception`,v:''},{n:`The Ban Pa Horror`,v:'0.4'},{n:`The Cleaner`,v:'0.4'},{n:`The Congressman`,v:'0.4'},{n:`The Great Escape`,v:'0.4'},{n:`The Liberator`,v:'0.4'},{n:`The Man Who Disappeared`,v:'0.4'},{n:`The More the Merrier`,v:'0.4'},{n:`The Shadow over Ban Pa`,v:'0.4',locked:true},{n:`Trifle`,v:'0.4'},{n:`Troll Bridge`,v:'0.4'},{n:`True Grit`,v:'0.4',locked:true},{n:`Unattainable Luxury`,v:'0.4'},{n:`UNLRA`,v:'0.4',locked:true},{n:`Up to Snuff`,v:'0.4'},{n:`What Comes Up`,v:'0.4'}],
+  'LabRat': [{n:`A Voice From The Stars`,v:'0.4',locked:true},{n:`Covert Research`,v:''},{n:`Crumb Collector`,v:'0.4',locked:true},{n:`Cryptic Signal VII`,v:'0.4'},{n:`Cryptic Signals III`,v:'0.4'},{n:`Cryptic Signals VI`,v:'0.4'},{n:`Cult Business`,v:'0.4',locked:true},{n:`Duty to the Country`,v:'0.4',locked:true},{n:`Echoes of Exposure`,v:'0.4'},{n:`Elderly Delivery`,v:'0.4'},{n:`Escort II`,v:'0.4'},{n:`Exodus`,v:'0.4'},{n:`False Positive`,v:'0.4'},{n:`Firestarter`,v:'0.4'},{n:`Interrupted Aid`,v:'0.4'},{n:`Lethal Dose`,v:'0.4'},{n:`Living in Burrows`,v:'',locked:true},{n:`Lost and Found`,v:''},{n:`Meds Wanted`,v:''},{n:`Memory Leak`,v:'0.4',locked:true},{n:`Mystery Machines`,v:'0.4'},{n:`Native Negotiations`,v:''},{n:`No Casualties`,v:'0.4'},{n:`Postman Rings Twice`,v:'0.4'},{n:`Ripper`,v:'0.4',locked:true},{n:`Secret Compassion`,v:''},{n:`Seeker of Change`,v:'0.4',locked:true},{n:`So Close`,v:'0.4'},{n:`Spit Out the Poison`,v:'0.4'},{n:`The Most Dangerous Game`,v:'0.4',locked:true},{n:`The Runaway`,v:'0.4'},{n:`The Trickster`,v:'0.4'},{n:`Too Close to the Sun`,v:'0.4'},{n:`Unlisted Flight`,v:'0.4',locked:true},{n:`UNprotected`,v:'0.4'},{n:`Up the Stream`,v:'0.4'}],
+  'Turncoat': [{n:`A Small Favor`,v:'0.4',locked:true},{n:`A Tiding of Magpies`,v:'0.4'},{n:`Academic Interest`,v:'0.4',locked:true},{n:`Delayed Package`,v:'0.4',locked:true},{n:`Dishonest Practices`,v:'0.4'},{n:`Double Agent`,v:'0.4'},{n:`Double Exposure`,v:'0.4'},{n:`Downsizing`,v:'0.4'},{n:`Dragonslayer`,v:'0.4'},{n:`Family Heirloom`,v:'0.4',locked:true},{n:`Freedom Fighter Hunt`,v:'0.4'},{n:`Friendly Suggestion`,v:'0.4'},{n:`In the Right Hands`,v:'0.4'},{n:`In The Trenches`,v:'0.4'},{n:`Letters From Lamang`,v:'0.4'},{n:`Like A Boss - Buran's AK-74N`,v:'0.4',locked:true},{n:`Like A Boss - Firebrand's AKS-74u`,v:'0.4'},{n:`Local Golf Star`,v:'0.4'},{n:`Name Your Poison`,v:'0.4'},{n:`Narcotic Bargain`,v:'0.4'},{n:`No Questions Asked`,v:'0.4'},{n:`Not On My Watch`,v:'0.4'},{n:`One Man's Trash`,v:'0.4'},{n:`Repossession`,v:'0.4'},{n:`Repossession II`,v:'0.4'},{n:`Repossession III`,v:'0.4'},{n:`Repossession IX`,v:'0.4'},{n:`The Snitch`,v:'0.4',locked:true},{n:`The Value of Sharing`,v:'0.4'}],
+  'Vulture': [{n:`Like A Boss - Grin's 1911 C`,v:'0.4'},{n:`Like A Boss - Viper's 1911 C`,v:'0.4'}]
+}
+
+const taskDone = new Set(JSON.parse(localStorage.getItem('gzw_tasks') || '[]'));
+
+function saveTasks() { localStorage.setItem('gzw_tasks', JSON.stringify([...taskDone])); }
+
+window.toggleTask = function(key) {
+  if (taskDone.has(key)) taskDone.delete(key); else taskDone.add(key);
+  saveTasks(); filterTasks();
+};
+
+window.clearAllTasks = function() {
+  if (confirm('Reset all task progress?')) { taskDone.clear(); saveTasks(); filterTasks(); }
+};
+
+function filterTasks() {
+  const search = document.getElementById('taskSearch').value.toLowerCase();
+  const trader = document.getElementById('taskTrader').value;
+  const status = document.getElementById('taskStatus').value;
+  const list = document.getElementById('tasksList');
+  let totalAll = 0, totalDone = 0, html = '';
+
+  Object.entries(tasksData).forEach(([traderName, tasks]) => {
+    if (trader && traderName !== trader) return;
+    const filtered = tasks.filter(t => {
+      if (search && !t.n.toLowerCase().includes(search)) return false;
+      const done = taskDone.has(traderName + ':' + t.n);
+      if (status === 'done' && !done) return false;
+      if (status === 'todo' && done) return false;
+      return true;
+    });
+    if (!filtered.length) return;
+    totalAll += filtered.length;
+    const doneCount = filtered.filter(t => taskDone.has(traderName + ':' + t.n)).length;
+    totalDone += doneCount;
+    html += '<div class="tasks-trader-section">';
+    html += '<div class="tasks-trader-header"><span class="tasks-trader-name">&#9670; ' + traderName + '</span><span class="tasks-trader-count">' + doneCount + ' / ' + filtered.length + '</span></div>';
+    html += '<div class="tasks-trader-body">';
+    filtered.forEach(t => {
+      const key = traderName + ':' + t.n;
+      const done = taskDone.has(key);
+      const tags = [];
+      if (t.v) tags.push('<span class="tag-ver">v' + t.v + '</span>');
+      if (t.locked) tags.push('<span class="tag-locked">LOCKED</span>');
+      html += '<div class="task-row' + (done ? ' done' : '') + '">';
+      html += '<span class="task-name' + (done ? ' done-text' : '') + '">' + t.n + '</span>';
+      html += '<span class="task-tags">' + tags.join('') + '</span>';
+      html += '<button class="task-check' + (done ? ' checked' : '') + '" onclick="toggleTask(' + JSON.stringify(key) + ')">' + (done ? '&#10003;' : '') + '</button>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+  });
+
+  list.innerHTML = html || '<div class="no-results" style="padding:3rem;text-align:center;color:var(--dim);">NO TASKS MATCH YOUR FILTERS</div>';
+
+  const pct = totalAll ? Math.round(totalDone / totalAll * 100) : 0;
+  document.getElementById('taskStats').innerHTML =
+    '<div class="stat"><div class="stat-label">Total Tasks</div><div class="stat-value">' + totalAll + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Completed</div><div class="stat-value" style="color:var(--green)">' + totalDone + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Remaining</div><div class="stat-value" style="color:var(--amber)">' + (totalAll - totalDone) + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Progress</div><div class="stat-value">' + pct + '%</div></div>';
+}
+filterTasks();
+
+// Wire up event listeners after DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+  // Keys listeners
+  var ks = document.getElementById('keySearch');
+  var kl = document.getElementById('keyLocation');
+  var kf = document.getElementById('keyFilter');
+  if(ks) ks.addEventListener('input', filterKeys);
+  if(kl) kl.addEventListener('change', filterKeys);
+  if(kf) kf.addEventListener('change', filterKeys);
+  
+  // Tasks listeners
+  var ts = document.getElementById('taskSearch');
+  var tt = document.getElementById('taskTrader');
+  var tst = document.getElementById('taskStatus');
+  if(ts) ts.addEventListener('input', filterTasks);
+  if(tt) tt.addEventListener('change', filterTasks);
+  if(tst) tst.addEventListener('change', filterTasks);
+
+  // Initial renders
+  filterKeys();
+  filterTasks();
+  render();
+});
+
+window.openImgModal = function(src, name) {
+  document.getElementById('modalImg').src = src;
+  document.getElementById('modalName').textContent = name;
+  document.getElementById('imgModal').classList.add('open');
+};
+window.closeImgModal = function() {
+  document.getElementById('imgModal').classList.remove('open');
+};
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeImgModal(); });
 </script>
 </body>
 </html>
